@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: midterm-api
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DB_HOST
+        value: dpg-cvfe9trqf0us73fpqpj0-a.ohio-postgres.render.com
+      - key: DB_PORT
+        value: 5432
+      - key: DB_NAME
+        value: quotesdb1
+      - key: DB_USER
+        value: quotesdb_user
+      - key: DB_PASS
+        value: 3rh4PKyTQ4jHQIgo126Gc9RPAVyQbABv
