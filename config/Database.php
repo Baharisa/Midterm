@@ -3,8 +3,9 @@
 // Load Composer's autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Load environment variables from the .env file in the root directory
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+// Prefer .env.local if it exists (for local testing)
+$envPath = file_exists(__DIR__ . '/../.env.local') ? '.env.local' : '.env';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../', $envPath);
 $dotenv->load();
 
 class Database {
@@ -17,7 +18,6 @@ class Database {
     public $conn;
 
     public function __construct() {
-        // Set from environment variables
         $this->host = $_ENV['DB_HOST'];
         $this->port = $_ENV['DB_PORT'];
         $this->dbname = $_ENV['DB_NAME'];
@@ -31,10 +31,7 @@ class Database {
         try {
             $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->dbname}";
             $this->conn = new PDO($dsn, $this->username, $this->password);
-
-            // Set PDO error mode to exception
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
         } catch (PDOException $e) {
             echo 'Connection error: ' . $e->getMessage();
         }
