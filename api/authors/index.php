@@ -1,48 +1,31 @@
 <?php
-// ✅ CORS and Headers
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
-$method = $_SERVER['REQUEST_METHOD'];
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Access-Control-Allow-Headers,Content-Type,Access-Control-Allow-Methods, Authorization, X-Requested-With');
 
-if ($method === 'OPTIONS') {
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-    header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
-    exit();
-}
+include_once '../../config/Database.php';
+include_once '../../models/Author.php';
 
-// ✅ Includes (relative path)
-include_once('../../config/Database.php');
-include_once('../../models/Author.php');
-
-// ✅ Initialize DB and model
 $database = new Database();
-$db = $database->getConnection();
+$db = $database->connect();
+
 $author = new Author($db);
 
-// ✅ Handle GET logic
-if ($method === 'GET') {
-    if (isset($_GET['id'])) {
-        $result = $author->read_single($_GET['id']);
+// Get raw posted data
+$data = json_decode(file_get_contents("php://input"));
 
-        if ($result) {
-            echo json_encode($result, JSON_PRETTY_PRINT);
-        } else {
-            echo json_encode(['message' => 'author_id Not Found']);
-        }
+if (!empty($data->author)) {
+    $author->author = $data->author;
+
+    if ($author->create()) {
+        echo json_encode([
+            'id' => $author->id,
+            'author' => $author->author
+        ]);
     } else {
-        $stmt = $author->read();
-        $authors = [];
-
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $authors[] = $row;
-        }
-
-        if (count($authors)) {
-            echo json_encode(['records' => $authors], JSON_PRETTY_PRINT);
-        } else {
-            echo json_encode(['message' => 'No Authors Found']);
-        }
+        echo json_encode(['message' => 'Author Not Created']);
     }
 } else {
-    echo json_encode(['message' => 'Method Not Allowed']);
+    echo json_encode(['message' => 'Missing Required Parameters']);
 }

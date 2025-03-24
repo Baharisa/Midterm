@@ -1,50 +1,31 @@
 <?php
-// ✅ CORS and Headers
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
-$method = $_SERVER['REQUEST_METHOD'];
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Access-Control-Allow-Headers,Content-Type,Access-Control-Allow-Methods, Authorization, X-Requested-With');
 
-if ($method === 'OPTIONS') {
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-    header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
-    exit();
-}
+include_once '../../config/Database.php';
+include_once '../../models/Category.php';
 
-// ✅ Include database and model (correct path from categories/)
-include_once('../../config/Database.php');
-include_once('../../models/Category.php');
-
-// ✅ Initialize DB connection
 $database = new Database();
-$db = $database->getConnection();
+$db = $database->connect();
 
-// ✅ Initialize Category model
 $category = new Category($db);
 
-// ✅ Handle GET Request
-if ($method === 'GET') {
-    if (isset($_GET['id'])) {
-        $result = $category->read_single($_GET['id']);
+// Get raw posted data
+$data = json_decode(file_get_contents("php://input"));
 
-        if ($result) {
-            echo json_encode($result, JSON_PRETTY_PRINT);
-        } else {
-            echo json_encode(['message' => 'category_id Not Found']);
-        }
+if (!empty($data->category)) {
+    $category->category = $data->category;
+
+    if ($category->create()) {
+        echo json_encode([
+            'id' => $category->id,
+            'category' => $category->category
+        ]);
     } else {
-        $stmt = $category->read();
-        $categories = [];
-
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $categories[] = $row;
-        }
-
-        if (count($categories)) {
-            echo json_encode(['records' => $categories], JSON_PRETTY_PRINT);
-        } else {
-            echo json_encode(['message' => 'No Categories Found']);
-        }
+        echo json_encode(['message' => 'Category Not Created']);
     }
 } else {
-    echo json_encode(['message' => 'Method Not Allowed']);
+    echo json_encode(['message' => 'Missing Required Parameters']);
 }
