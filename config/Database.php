@@ -1,11 +1,10 @@
 <?php
 
-// Load Composer's autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Prefer .env.local if it exists (for local testing)
-$envPath = file_exists(__DIR__ . '/../.env.local') ? '.env.local' : '.env';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../', $envPath);
+// Load environment
+$envFile = file_exists(__DIR__ . '/../.env.local') ? '.env.local' : '.env';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../', $envFile);
 $dotenv->load();
 
 class Database {
@@ -18,12 +17,11 @@ class Database {
     public $conn;
 
     public function __construct() {
-        $this->host = $_ENV['DB_HOST'];
-      
-    
-        $this->dbname = $_ENV['DB_NAME'];
-        $this->username = $_ENV['DB_USER'];
-        $this->password = $_ENV['DB_PASS'];
+        $this->host = $_ENV['DB_HOST'] ?? 'localhost';
+        $this->port = $_ENV['DB_PORT'] ?? '5432'; // fallback for Render
+        $this->dbname = $_ENV['DB_NAME'] ?? 'quotesdb1';
+        $this->username = $_ENV['DB_USER'] ?? 'postgres';
+        $this->password = $_ENV['DB_PASS'] ?? '';
     }
 
     public function getConnection() {
@@ -34,7 +32,10 @@ class Database {
             $this->conn = new PDO($dsn, $this->username, $this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-            echo json_encode(['error' => 'Connection error: ' . $e->getMessage()]);
+            echo json_encode([
+                "message" => "Database connection error",
+                "error" => $e->getMessage()
+            ]);
             exit;
         }
 
