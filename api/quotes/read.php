@@ -6,10 +6,10 @@ include_once '../../models/Quote.php';
 $database = new Database();
 $db = $database->getConnection();
 
-// Instantiate Quote model
+// Instantiate quote object
 $quote = new Quote($db);
 
-// Get all quotes
+// Fetch all quotes
 $result = $quote->read_all();
 $num = $result->rowCount();
 
@@ -18,6 +18,7 @@ if ($num > 0) {
 
     while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
         extract($row);
+
         $quotes_arr[] = [
             'id' => $id,
             'quote' => $quote,
@@ -26,7 +27,7 @@ if ($num > 0) {
         ];
     }
 
-    echo json_encode($quotes_arr); // <- return just array, not { "records": [...] }
+    echo json_encode($quotes_arr);
 } else {
     echo json_encode([]);
 }
