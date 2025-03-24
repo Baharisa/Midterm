@@ -1,4 +1,4 @@
-// read.php
+
 <?php
 require_once '../../config/Database.php';
 require_once '../../models/Author.php';

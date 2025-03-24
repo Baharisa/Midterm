@@ -1,6 +1,5 @@
-               
-
 *.log
 .env
 .env.local
-.htaccess
+
+# .htaccess   ← ✅ This makes Git *include* the .htaccess file!

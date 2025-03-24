@@ -1,4 +1,3 @@
-// models/Quote.php
 <?php
 class Quote {
     private $conn;
