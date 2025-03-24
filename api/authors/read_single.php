@@ -1,26 +1,28 @@
-
 <?php
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
-require_once '../../config/Database.php';
-require_once '../../models/Author.php';
+include_once '../../config/Database.php';
+include_once '../../models/Author.php';
 
 $database = new Database();
 $db = $database->getConnection();
 $author = new Author($db);
 
-$id = isset($_GET['id']) ? $_GET['id'] : null;
+// Get ID from query param
+$author_id = isset($_GET['id']) ? $_GET['id'] : null;
 
-if ($id && is_numeric($id)) {
-    $result = $author->read_single($id);
-    $row = $result->fetch(PDO::FETCH_ASSOC);
-
-    if ($row) {
-        echo json_encode($row);
-    } else {
-        echo json_encode(['message' => 'author_id Not Found']);
-    }
-} else {
+if (!$author_id) {
     echo json_encode(['message' => 'Missing Required Parameters']);
+    exit;
+}
+
+// Call the model method
+$result = $author->read_single($author_id);
+
+// Check if author exists
+if ($result) {
+    echo json_encode($result);
+} else {
+    echo json_encode(['message' => 'author_id Not Found']);
 }
