@@ -19,8 +19,8 @@ if ($num > 0) {
         $quotes_arr[] = [
             'id' => $id,
             'quote' => $quote,
-            'author' => $author,
-            'category' => $category
+            'author' => $author,        // match alias in SQL
+            'category' => $category     // match alias in SQL
         ];
     }
 

@@ -1,73 +1,25 @@
 <?php
+header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json');
 
-class Category {
-    private $conn;
-    private $table = 'categories';
+include_once '../../config/Database.php';
+include_once '../../models/Category.php';
 
-    public $id;
-    public $category;
+$database = new Database();
+$db = $database->getConnection();
 
-    public function __construct($db) {
-        $this->conn = $db;
-    }
+$category = new Category($db);
+$stmt = $category->read();
 
-    // 🔍 Read all categories
-    public function read() {
-        $query = "SELECT id, category FROM " . $this->table . " ORDER BY id ASC";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute();
-        return $stmt;
-    }
+$categories_arr = [];
 
-    // 🔍 Read single category by ID
-    public function read_single($id) {
-        $query = "SELECT id, category FROM " . $this->table . " WHERE id = :id LIMIT 1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    extract($row);
 
-        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            return $row;
-        }
-
-        return null;
-    }
-
-
-    public function create() {
-        $query = "INSERT INTO " . $this->table . " (category) VALUES (:category) RETURNING id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':category', $this->category);
-    
-        if ($stmt->execute()) {
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $this->id = $row['id'];
-            return true;
-        }
-    
-        return false;
-    }
-
-    public function update() {
-        $query = "UPDATE " . $this->table . " SET category = :category WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':category', $this->category);
-        $stmt->bindParam(':id', $this->id);
-    
-        $stmt->execute();
-    
-        return $stmt->rowCount() > 0;
-    }
-    
-    public function delete() {
-        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $this->id);
-    
-        $stmt->execute();
-    
-        return $stmt->rowCount() > 0;
-    }
-    
-    
+    $categories_arr[] = [
+        'id' => $id,
+        'category' => $category
+    ];
 }
+
+echo json_encode($categories_arr);
