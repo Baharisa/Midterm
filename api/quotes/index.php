@@ -17,19 +17,38 @@ $database = new Database();
 $db = $database->getConnection();
 $quote = new Quote($db);
 
+// For POST/PUT/DELETE: parse input JSON and share globally
+if (in_array($method, ['POST', 'PUT', 'DELETE'])) {
+    $input = file_get_contents("php://input");
+    if ($input) {
+        $data = json_decode($input);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            $GLOBALS['data'] = $data;
+        } else {
+            http_response_code(400);
+            echo json_encode(['message' => 'Invalid JSON']);
+            exit();
+        }
+    } else {
+        http_response_code(400);
+        echo json_encode(['message' => 'No input received']);
+        exit();
+    }
+}
+
 switch ($method) {
     case 'GET':
         $id = $_GET['id'] ?? null;
         $author_id = $_GET['author_id'] ?? null;
         $category_id = $_GET['category_id'] ?? null;
-    
+
         if ($id) {
             $data = $quote->read_single($id);
             echo $data ? json_encode($data) : json_encode(['message' => 'No Quotes Found']);
         } elseif ($author_id || $category_id) {
             $stmt = $quote->read_filtered($author_id, $category_id);
             $quotes_arr = [];
-    
+
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $quotes_arr[] = [
                     'id' => $row['id'],
@@ -38,14 +57,14 @@ switch ($method) {
                     'category' => $row['category']
                 ];
             }
-    
+
             echo count($quotes_arr) > 0
                 ? json_encode($quotes_arr)
                 : json_encode(['message' => 'No Quotes Found']);
         } else {
             $stmt = $quote->read_all();
             $quotes_arr = [];
-    
+
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $quotes_arr[] = [
                     'id' => $row['id'],
@@ -54,21 +73,15 @@ switch ($method) {
                     'category' => $row['category']
                 ];
             }
-    
+
             echo json_encode($quotes_arr);
         }
         break;
 
     case 'POST':
-        require 'create.php';
-        break;
-
     case 'PUT':
-        require 'update.php';
-        break;
-
     case 'DELETE':
-        require 'delete.php';
+        require strtolower($method) . '.php';  // includes create.php, update.php, delete.php
         break;
 
     default:
