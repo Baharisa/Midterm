@@ -1,28 +1,29 @@
 <?php
-include_once '../config/Database.php';
-include_once '../models/Category.php';
-include_once '../header.php';
+header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json');
+
+require_once('../../config/Database.php');
+require_once('../../models/Category.php');
 
 $database = new Database();
 $db = $database->getConnection();
-
 $category = new Category($db);
 
-// Get ID from URL
-$category->id = isset($_GET['id']) ? $_GET['id'] : die();
+// Get ID from query string
+$id = isset($_GET['id']) ? $_GET['id'] : null;
 
-$category->readOne();
+if ($id && is_numeric($id)) {
+    $result = $category->read_single($id);
+    $row = $result->fetch(PDO::FETCH_ASSOC);
 
-if ($category->category != null) {
-    $category_arr = array(
-        "id" => $category->id,
-        "category" => $category->category
-    );
-
-    http_response_code(200);
-    echo json_encode($category_arr);
+    if ($row) {
+        echo json_encode([
+            'id' => $row['id'],
+            'category' => $row['category']
+        ]);
+    } else {
+        echo json_encode(['message' => 'category_id Not Found']);
+    }
 } else {
-    http_response_code(404);
-    echo json_encode(array("message" => "Category not found."));
+    echo json_encode(['message' => 'Missing Required Parameters']);
 }
-?>

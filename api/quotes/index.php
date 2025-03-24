@@ -2,13 +2,6 @@
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
-include_once '../../config/Database.php';
-include_once '../../models/Quote.php';
-
-$database = new Database();
-$db = $database->getConnection();
-$quote = new Quote($db);
-
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'OPTIONS') {
@@ -17,41 +10,52 @@ if ($method === 'OPTIONS') {
     exit();
 }
 
+require_once '../../config/Database.php';
+require_once '../../models/Quote.php';
+
+$database = new Database();
+$db = $database->getConnection();
+$quote = new Quote($db);
+
 switch ($method) {
     case 'GET':
         $id = $_GET['id'] ?? null;
         $author_id = $_GET['author_id'] ?? null;
         $category_id = $_GET['category_id'] ?? null;
-
+    
         if ($id) {
             $data = $quote->read_single($id);
-            if ($data) {
-                echo json_encode($data);
-            } else {
-                echo json_encode(["message" => "No Quotes Found"]);
-            }
+            echo $data ? json_encode($data) : json_encode(['message' => 'No Quotes Found']);
         } elseif ($author_id || $category_id) {
-            $data = $quote->read_filtered($author_id, $category_id);
-            echo json_encode($data);
+            $stmt = $quote->read_filtered($author_id, $category_id);
+            $quotes_arr = [];
+    
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $quotes_arr[] = [
+                    'id' => $row['id'],
+                    'quote' => $row['quote'],
+                    'author' => $row['author'],
+                    'category' => $row['category']
+                ];
+            }
+    
+            echo count($quotes_arr) > 0
+                ? json_encode($quotes_arr)
+                : json_encode(['message' => 'No Quotes Found']);
         } else {
             $stmt = $quote->read_all();
-            $num = $stmt->rowCount();
             $quotes_arr = [];
-
-            if ($num > 0) {
-                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                    extract($row);
-                    $quotes_arr[] = [
-                        'id' => $id,
-                        'quote' => $quote,
-                        'author' => $author,
-                        'category' => $category
-                    ];
-                }
-                echo json_encode($quotes_arr);
-            } else {
-                echo json_encode([]);
+    
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $quotes_arr[] = [
+                    'id' => $row['id'],
+                    'quote' => $row['quote'],
+                    'author' => $row['author'],
+                    'category' => $row['category']
+                ];
             }
+    
+            echo json_encode($quotes_arr);
         }
         break;
 

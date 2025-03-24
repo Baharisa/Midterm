@@ -4,8 +4,8 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: PUT');
 header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
 
-include_once('../../config/Database.php');
-include_once('../../models/Category.php');
+require_once('../../config/Database.php');
+require_once('../../models/Category.php');
 
 $database = new Database();
 $db = $database->getConnection();
@@ -17,11 +17,10 @@ if (!empty($data->id) && !empty($data->category)) {
     $category->id = $data->id;
     $category->category = $data->category;
 
-    if ($category->update()) {
-        echo json_encode([
-            'id' => $category->id,
-            'category' => $category->category
-        ]);
+    $result = $category->update();
+
+    if ($result) {
+        echo json_encode($result); // updated row
     } else {
         echo json_encode(['message' => 'No Categories Found']);
     }

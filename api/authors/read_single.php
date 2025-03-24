@@ -1,29 +1,26 @@
- 
+// read_single.php
 <?php
-include_once '../config/Database.php';
-include_once '../models/Author.php';
-include_once '../header.php';
+header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json');
+
+require_once '../../config/Database.php';
+require_once '../../models/Author.php';
 
 $database = new Database();
 $db = $database->getConnection();
-
 $author = new Author($db);
 
-// Get ID from URL
-$author->id = isset($_GET['id']) ? $_GET['id'] : die();
+$id = isset($_GET['id']) ? $_GET['id'] : null;
 
-$author->readOne();
+if ($id && is_numeric($id)) {
+    $result = $author->read_single($id);
+    $row = $result->fetch(PDO::FETCH_ASSOC);
 
-if ($author->author != null) {
-    $author_arr = array(
-        "id" => $author->id,
-        "author" => $author->author
-    );
-
-    http_response_code(200);
-    echo json_encode($author_arr);
+    if ($row) {
+        echo json_encode($row);
+    } else {
+        echo json_encode(['message' => 'author_id Not Found']);
+    }
 } else {
-    http_response_code(404);
-    echo json_encode(array("message" => "Author not found."));
+    echo json_encode(['message' => 'Missing Required Parameters']);
 }
-?>

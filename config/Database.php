@@ -19,7 +19,7 @@ class Database {
 
     public function __construct() {
         $this->host = $_ENV['DB_HOST'];
-        $this->port = $_ENV['DB_PORT'];
+        $this->port = $_ENV['DB_PORT'] ?? '5432'; // fallback to 5432
         $this->dbname = $_ENV['DB_NAME'];
         $this->username = $_ENV['DB_USER'];
         $this->password = $_ENV['DB_PASS'];
@@ -33,7 +33,8 @@ class Database {
             $this->conn = new PDO($dsn, $this->username, $this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $e) {
-            echo 'Connection error: ' . $e->getMessage();
+            echo json_encode(['error' => 'Connection error: ' . $e->getMessage()]);
+            exit;
         }
 
         return $this->conn;

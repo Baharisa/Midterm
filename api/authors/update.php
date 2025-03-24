@@ -1,11 +1,12 @@
+// update.php
 <?php
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: PUT');
 header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
 
-include_once('../../config/Database.php');
-include_once('../../models/Author.php');
+require_once('../../config/Database.php');
+require_once('../../models/Author.php');
 
 $database = new Database();
 $db = $database->getConnection();
@@ -17,11 +18,10 @@ if (!empty($data->id) && !empty($data->author)) {
     $author->id = $data->id;
     $author->author = $data->author;
 
-    if ($author->update()) {
-        echo json_encode([
-            'id' => $author->id,
-            'author' => $author->author
-        ]);
+    $result = $author->update();
+
+    if ($result) {
+        echo json_encode($result);
     } else {
         echo json_encode(['message' => 'No Authors Found']);
     }

@@ -1,29 +1,27 @@
 <?php
-include_once '../../config/Database.php';
-include_once '../../models/Category.php';
+require_once '../../config/Database.php';
+require_once '../../models/Category.php';
 
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
 $database = new Database();
 $db = $database->getConnection();
+
 $category = new Category($db);
+$result = $category->read_all();
 
-$result = $category->read();
-$num = $result->rowCount();
-
-if ($num > 0) {
+if ($result && $result->rowCount() > 0) {
     $categories_arr = [];
 
     while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-        extract($row);
         $categories_arr[] = [
-            'id' => $id,
-            'category' => $category
+            'id' => $row['id'],
+            'category' => $row['category']
         ];
     }
 
     echo json_encode($categories_arr);
 } else {
-    echo json_encode([]);
+    echo json_encode(['message' => 'category_id Not Found']);
 }

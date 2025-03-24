@@ -4,8 +4,8 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: DELETE');
 header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
 
-include_once('../../config/Database.php');
-include_once('../../models/Category.php');
+require_once('../../config/Database.php');
+require_once('../../models/Category.php');
 
 $database = new Database();
 $db = $database->getConnection();

@@ -1,5 +1,5 @@
+// models/Quote.php
 <?php
-
 class Quote {
     private $conn;
     private $table = 'quotes';
@@ -13,7 +13,7 @@ class Quote {
         $this->conn = $db;
     }
 
-    // ✅ READ ALL (for /quotes/ endpoint)
+    // READ ALL
     public function read_all() {
         $query = "SELECT q.id, q.quote, a.author AS author, c.category AS category
                   FROM " . $this->table . " q
@@ -27,7 +27,7 @@ class Quote {
         return $stmt;
     }
 
-    // ✅ READ SINGLE (for /quotes/?id=10)
+    // READ SINGLE BY ID
     public function read_single($id) {
         $query = "SELECT q.id, q.quote, a.author AS author, c.category AS category
                   FROM " . $this->table . " q
@@ -43,17 +43,17 @@ class Quote {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // ✅ READ FILTERED (for ?author_id=5&category_id=4)
+    // READ FILTERED (BY AUTHOR/CATEGORY)
     public function read_filtered($author_id = null, $category_id = null) {
         $conditions = [];
         $params = [];
 
-        if ($author_id !== null) {
+        if (!empty($author_id)) {
             $conditions[] = 'q.author_id = :author_id';
             $params[':author_id'] = $author_id;
         }
 
-        if ($category_id !== null) {
+        if (!empty($category_id)) {
             $conditions[] = 'q.category_id = :category_id';
             $params[':category_id'] = $category_id;
         }
@@ -68,15 +68,15 @@ class Quote {
                   ORDER BY q.id ASC";
 
         $stmt = $this->conn->prepare($query);
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
         }
-
         $stmt->execute();
+
         return $stmt;
     }
 
-    // ✅ CREATE
+    // CREATE
     public function create() {
         $query = "INSERT INTO " . $this->table . " (quote, author_id, category_id)
                   VALUES (:quote, :author_id, :category_id)
@@ -90,17 +90,22 @@ class Quote {
         if ($stmt->execute()) {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             $this->id = $row['id'];
-            return true;
+            return [
+                'id' => $this->id,
+                'quote' => $this->quote,
+                'author_id' => $this->author_id,
+                'category_id' => $this->category_id
+            ];
         }
 
         return false;
     }
 
-    // ✅ UPDATE
+    // UPDATE
     public function update() {
         $query = "UPDATE " . $this->table . "
                   SET quote = :quote, author_id = :author_id, category_id = :category_id
-                  WHERE id = :id";
+                  WHERE id = :id RETURNING id";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':quote', $this->quote);
@@ -108,14 +113,21 @@ class Quote {
         $stmt->bindParam(':category_id', $this->category_id);
         $stmt->bindParam(':id', $this->id);
 
-        $stmt->execute();
-        return $stmt->rowCount() > 0;
+        if ($stmt->execute()) {
+            return [
+                'id' => $this->id,
+                'quote' => $this->quote,
+                'author_id' => $this->author_id,
+                'category_id' => $this->category_id
+            ];
+        }
+
+        return false;
     }
 
-    // ✅ DELETE
+    // DELETE
     public function delete() {
         $query = "DELETE FROM " . $this->table . " WHERE id = :id";
-
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $this->id);
 

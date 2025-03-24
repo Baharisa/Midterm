@@ -11,62 +11,67 @@ class Author {
         $this->conn = $db;
     }
 
-    // 🔍 Read all authors
-    public function read() {
-        $query = "SELECT id, author FROM " . $this->table . " ORDER BY id ASC";
+    public function read_all() {
+        $query = "SELECT id, author FROM {$this->table} ORDER BY id ASC";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
     }
 
-    // 🔍 Read single author by ID
     public function read_single($id) {
-        $query = "SELECT id, author FROM " . $this->table . " WHERE id = :id LIMIT 1";
+        $query = "SELECT id, author FROM {$this->table} WHERE id = :id LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
         $stmt->execute();
-
-        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            return $row;
-        }
-
-        return null;
+        return $stmt;
     }
 
     public function create() {
-        $query = "INSERT INTO " . $this->table . " (author) VALUES (:author) RETURNING id";
+        $query = "INSERT INTO {$this->table} (author) VALUES (:author) RETURNING id, author";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':author', $this->author);
-    
+
         if ($stmt->execute()) {
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $this->id = $row['id'];
-            return true;
+            return $stmt->fetch(PDO::FETCH_ASSOC); // Returns id + author
         }
-    
+
         return false;
     }
 
     public function update() {
-        $query = "UPDATE " . $this->table . " SET author = :author WHERE id = :id";
+        $query = "UPDATE {$this->table} SET author = :author WHERE id = :id RETURNING id, author";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':author', $this->author);
         $stmt->bindParam(':id', $this->id);
-    
-        $stmt->execute();
-    
-        return $stmt->rowCount() > 0;
+
+        if ($stmt->execute()) {
+            return $stmt->fetch(PDO::FETCH_ASSOC); // Returns updated row
+        }
+
+        return false;
     }
-    
+
     public function delete() {
-        $query = "DELETE FROM " . $this->table . " WHERE id = :id";
+        $query = "DELETE FROM {$this->table} WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $this->id);
     
-        $stmt->execute();
-    
-        return $stmt->rowCount() > 0;
+        try {
+            if ($stmt->execute()) {
+                return true;
+            }
+            return false;
+        } catch (PDOException $e) {
+            if ($e->getCode() == '23503') { // Foreign key violation
+                echo json_encode([
+                    'message' => 'Cannot delete author: author_id is in use'
+                ]);
+                exit();
+            } else {
+                echo json_encode(['message' => 'Database error: ' . $e->getMessage()]);
+                exit();
+            }
+        }
     }
-    
     
 }
