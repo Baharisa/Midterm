@@ -145,6 +145,17 @@ class Quote {
         return $stmt->rowCount() > 0;
     }
     
+    public function read_all() {
+        $query = "SELECT q.id, q.quote, a.author AS author_name, c.category AS category_name
+                  FROM " . $this->table . " q
+                  JOIN authors a ON q.author_id = a.id
+                  JOIN categories c ON q.category_id = c.id";
+    
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+    
+        return $stmt;
+    }
     
     
 }
