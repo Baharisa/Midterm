@@ -19,7 +19,8 @@ class Database {
 
     public function __construct() {
         $this->host = $_ENV['DB_HOST'];
-        $this->port = $_ENV['DB_PORT'] ?? '5432'; // fallback to 5432
+      
+    
         $this->dbname = $_ENV['DB_NAME'];
         $this->username = $_ENV['DB_USER'];
         $this->password = $_ENV['DB_PASS'];
