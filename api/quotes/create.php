@@ -6,10 +6,9 @@ header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-
 
 require_once('../../models/Quote.php');
 
-$quote = new Quote($db);  // $db already set in index.php
-$data = $GLOBALS['data']; // from index.php
+$quote = new Quote($db); // $db already created in index.php
+$data = $GLOBALS['data']; // Parsed globally in index.php
 
-// Validate required fields
 if (!empty($data->quote) && !empty($data->author_id) && !empty($data->category_id)) {
     $quote->quote = $data->quote;
     $quote->author_id = $data->author_id;
@@ -19,12 +18,12 @@ if (!empty($data->quote) && !empty($data->author_id) && !empty($data->category_i
 
     if ($result) {
         http_response_code(201); // Created
-        echo json_encode($result);  // should include: id, quote, author_id, category_id
+        echo json_encode($result); // Must return: id, quote, author_id, category_id
     } else {
-        http_response_code(500); // Server error
-        echo json_encode(['message' => 'Quote Not Created']);
+        http_response_code(404); // For invalid foreign keys
+        echo json_encode(['message' => 'author_id or category_id Not Found']);
     }
 } else {
-    http_response_code(400); // Bad Request
+    http_response_code(400);
     echo json_encode(['message' => 'Missing Required Parameters']);
 }

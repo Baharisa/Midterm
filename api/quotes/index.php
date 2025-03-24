@@ -1,12 +1,13 @@
 <?php
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'OPTIONS') {
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-    header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
+    http_response_code(200);
     exit();
 }
 
@@ -17,25 +18,7 @@ $database = new Database();
 $db = $database->getConnection();
 $quote = new Quote($db);
 
-// For POST/PUT/DELETE: parse input JSON and share globally
-if (in_array($method, ['POST', 'PUT', 'DELETE'])) {
-    $input = file_get_contents("php://input");
-    if ($input) {
-        $data = json_decode($input);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            $GLOBALS['data'] = $data;
-        } else {
-            http_response_code(400);
-            echo json_encode(['message' => 'Invalid JSON']);
-            exit();
-        }
-    } else {
-        http_response_code(400);
-        echo json_encode(['message' => 'No input received']);
-        exit();
-    }
-}
-
+// Handle each HTTP method
 switch ($method) {
     case 'GET':
         $id = $_GET['id'] ?? null;
@@ -81,7 +64,28 @@ switch ($method) {
     case 'POST':
     case 'PUT':
     case 'DELETE':
-        require strtolower($method) . '.php';  // includes create.php, update.php, delete.php
+        $input = file_get_contents("php://input");
+        if ($input) {
+            $data = json_decode($input);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                // Make input data globally available
+                $GLOBALS['data'] = $data;
+
+                // Route to the proper script
+                $file = strtolower($method) . '.php';
+                if (file_exists($file)) {
+                    require $file;
+                } else {
+                    echo json_encode(['message' => 'Invalid Method Handler']);
+                }
+            } else {
+                http_response_code(400);
+                echo json_encode(['message' => 'Invalid JSON']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['message' => 'No input received']);
+        }
         break;
 
     default:
