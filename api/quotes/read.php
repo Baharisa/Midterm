@@ -6,27 +6,27 @@ include_once '../../models/Quote.php';
 $database = new Database();
 $db = $database->getConnection();
 
-// Instantiate quote object
+// Instantiate Quote model
 $quote = new Quote($db);
 
-// Get query params
-$author_id = isset($_GET['author_id']) ? $_GET['author_id'] : null;
-$category_id = isset($_GET['category_id']) ? $_GET['category_id'] : null;
-$id = isset($_GET['id']) ? $_GET['id'] : null;
+// Get all quotes
+$result = $quote->read_all();
+$num = $result->rowCount();
 
-if ($id) {
-    $result = $quote->read_single($id);
-    echo json_encode($result);
-} elseif ($author_id && $category_id) {
-    $results = $quote->read_filtered($author_id, $category_id);
-    echo json_encode($results);
-} elseif ($author_id) {
-    $results = $quote->read_filtered($author_id, null);
-    echo json_encode($results);
-} elseif ($category_id) {
-    $results = $quote->read_filtered(null, $category_id);
-    echo json_encode($results);
+if ($num > 0) {
+    $quotes_arr = [];
+
+    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+        extract($row);
+        $quotes_arr[] = [
+            'id' => $id,
+            'quote' => $quote,
+            'author' => $author_name,
+            'category' => $category_name
+        ];
+    }
+
+    echo json_encode($quotes_arr); // <- return just array, not { "records": [...] }
 } else {
-    $results = $quote->read_all();
-    echo json_encode($results);
+    echo json_encode([]);
 }
