@@ -1,4 +1,4 @@
-<?php
+<?php 
 // ✅ Standard CORS and headers for PUT request
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
@@ -30,8 +30,8 @@ if (
     $quote->author_id = $data->author_id;
     $quote->category_id = $data->category_id;
 
-    // ✅ Check if quote exists
-    if (!$quote->quote_exists($quote->id)) {
+    // ✅ Check if quote exists using read_single()
+    if (!$quote->read_single($quote->id)) {
         http_response_code(200); // ❗ Netlify expects 200 even for not found
         echo json_encode(['message' => 'No Quotes Found']);
         return;
@@ -39,14 +39,14 @@ if (
 
     // ✅ Check if author exists
     if (!$quote->author_exists($quote->author_id)) {
-        http_response_code(200); // ❗ must be 200 for Netlify
+        http_response_code(200); // ❗ Netlify expects 200
         echo json_encode(['message' => 'author_id Not Found']);
         return;
     }
 
     // ✅ Check if category exists
     if (!$quote->category_exists($quote->category_id)) {
-        http_response_code(200); // ❗ must be 200 for Netlify
+        http_response_code(200); // ❗ Netlify expects 200
         echo json_encode(['message' => 'category_id Not Found']);
         return;
     }
@@ -55,14 +55,14 @@ if (
     $result = $quote->update();
     if ($result) {
         http_response_code(200); // ✅ success
-        echo json_encode($result); // should include: id, quote, author_id, category_id
+        echo json_encode($result); // must include id, quote, author_id, category_id
     } else {
-        http_response_code(200); // ❗ Netlify doesn't test for 500, so stay safe with 200
+        http_response_code(200); // ❗ for Netlify
         echo json_encode(['message' => 'Quote Not Updated']);
     }
 
 } else {
     // ✅ Missing required fields
-    http_response_code(200); // ❗ Netlify expects 200 here
+    http_response_code(200); // ❗ Netlify expects 200
     echo json_encode(['message' => 'Missing Required Parameters']);
 }
