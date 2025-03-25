@@ -62,29 +62,38 @@ switch ($method) {
         break;
 
     case 'POST':
-    case 'PUT':
-    case 'DELETE':
         $input = file_get_contents("php://input");
-        if ($input) {
-            $data = json_decode($input);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                // Make input data globally available
-                $GLOBALS['data'] = $data;
-
-                // Route to the proper script
-                $file = strtolower($method) . '.php';
-                if (file_exists($file)) {
-                    require $file;
-                } else {
-                    echo json_encode(['message' => 'Invalid Method Handler']);
-                }
-            } else {
-                http_response_code(400);
-                echo json_encode(['message' => 'Invalid JSON']);
-            }
+        $data = json_decode($input);
+        if (json_last_error() === JSON_ERROR_NONE && $data) {
+            $GLOBALS['data'] = $data;
+            require 'create.php';
         } else {
             http_response_code(400);
-            echo json_encode(['message' => 'No input received']);
+            echo json_encode(['message' => 'Invalid JSON or No input received']);
+        }
+        break;
+
+    case 'PUT':
+        $input = file_get_contents("php://input");
+        $data = json_decode($input);
+        if (json_last_error() === JSON_ERROR_NONE && $data) {
+            $GLOBALS['data'] = $data;
+            require 'update.php';
+        } else {
+            http_response_code(400);
+            echo json_encode(['message' => 'Invalid JSON or No input received']);
+        }
+        break;
+
+    case 'DELETE':
+        $input = file_get_contents("php://input");
+        $data = json_decode($input);
+        if (json_last_error() === JSON_ERROR_NONE && $data) {
+            $GLOBALS['data'] = $data;
+            require 'delete.php';
+        } else {
+            http_response_code(400);
+            echo json_encode(['message' => 'Invalid JSON or No input received']);
         }
         break;
 
