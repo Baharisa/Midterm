@@ -6,37 +6,44 @@ header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-
 
 require_once('../../models/Quote.php');
 
+// Use $db passed from index.php
 $quote = new Quote($db);
-$data = $GLOBALS['data'];
+$data = $GLOBALS['data'] ?? null;
 
-if (!empty($data->quote) && !empty($data->author_id) && !empty($data->category_id)) {
+// Validate required fields
+if (
+    isset($data->quote) && !empty($data->quote) &&
+    isset($data->author_id) && !empty($data->author_id) &&
+    isset($data->category_id) && !empty($data->category_id)
+) {
     $quote->quote = $data->quote;
     $quote->author_id = $data->author_id;
     $quote->category_id = $data->category_id;
 
-    // Validate existence of author and category first
+    // ✅ Check if author exists
     if (!$quote->author_exists($quote->author_id)) {
         http_response_code(404);
         echo json_encode(['message' => 'author_id Not Found']);
-        exit();
+        return;
     }
 
+    // ✅ Check if category exists
     if (!$quote->category_exists($quote->category_id)) {
         http_response_code(404);
         echo json_encode(['message' => 'category_id Not Found']);
-        exit();
+        return;
     }
 
+    // ✅ Attempt to create quote
     $result = $quote->create();
-
     if ($result) {
-        http_response_code(201);
-        echo json_encode($result);  // ✅ Must include id, quote, author_id, category_id
+        http_response_code(201); // Created
+        echo json_encode($result); // Must return: id, quote, author_id, category_id
     } else {
-        http_response_code(500);
+        http_response_code(500); // Internal Server Error
         echo json_encode(['message' => 'Quote Not Created']);
     }
 } else {
-    http_response_code(400);
+    http_response_code(400); // Bad Request
     echo json_encode(['message' => 'Missing Required Parameters']);
 }
