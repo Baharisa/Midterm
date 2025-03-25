@@ -4,13 +4,17 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Origin, Accept, Content-Type, X-Requested-With');
 
+require_once('../../config/Database.php');
 require_once('../../models/Quote.php');
 
-// Use $db passed from index.php
+$database = new Database();
+$db = $database->getConnection();
 $quote = new Quote($db);
-$data = $GLOBALS['data'] ?? null;
 
-// Validate required fields
+// ✅ Use proper JSON decoding
+$data = json_decode(file_get_contents("php://input"));
+
+// ✅ Validate required fields
 if (
     isset($data->quote) && !empty($data->quote) &&
     isset($data->author_id) && !empty($data->author_id) &&
@@ -34,13 +38,13 @@ if (
         return;
     }
 
-    // ✅ Attempt to create quote
+    // ✅ Create quote
     $result = $quote->create();
     if ($result) {
         http_response_code(201); // Created
-        echo json_encode($result); // Must return: id, quote, author_id, category_id
+        echo json_encode($result); // Must include id, quote, author_id, category_id
     } else {
-        http_response_code(500); // Internal Server Error
+        http_response_code(500);
         echo json_encode(['message' => 'Quote Not Created']);
     }
 } else {

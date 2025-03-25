@@ -100,11 +100,11 @@ class Quote {
         return false;
     }
 
-    // UPDATE
+    // ✅ FIXED: UPDATE with row count check
     public function update() {
         $query = "UPDATE " . $this->table . "
                   SET quote = :quote, author_id = :author_id, category_id = :category_id
-                  WHERE id = :id RETURNING id";
+                  WHERE id = :id";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':quote', $this->quote);
@@ -112,7 +112,9 @@ class Quote {
         $stmt->bindParam(':category_id', $this->category_id);
         $stmt->bindParam(':id', $this->id);
 
-        if ($stmt->execute()) {
+        $stmt->execute();
+
+        if ($stmt->rowCount() > 0) {
             return [
                 'id' => $this->id,
                 'quote' => $this->quote,
