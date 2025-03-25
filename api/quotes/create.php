@@ -12,14 +12,17 @@ if (!empty($data->quote) && !empty($data->author_id) && !empty($data->category_i
     $result = $quote->create();
 
     if ($result) {
-        echo json_encode([
-            'id' => $result['id'],
-            'quote' => $result['quote'],
-            'author_id' => $result['author_id'],
-            'category_id' => $result['category_id']
-        ]);
+        http_response_code(201);
+        echo json_encode($result); // should include: id, quote, author_id, category_id
     } else {
-        echo json_encode(['message' => 'author_id Not Found']);
+        // Specific error messages expected:
+        if (!$quote->author_exists($quote->author_id)) {
+            echo json_encode(['message' => 'author_id Not Found']);
+        } elseif (!$quote->category_exists($quote->category_id)) {
+            echo json_encode(['message' => 'category_id Not Found']);
+        } else {
+            echo json_encode(['message' => 'Quote Not Created']);
+        }
     }
 } else {
     echo json_encode(['message' => 'Missing Required Parameters']);

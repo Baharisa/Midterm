@@ -13,14 +13,15 @@ if (!empty($data->id) && !empty($data->quote) && !empty($data->author_id) && !em
     $result = $quote->update();
 
     if ($result) {
-        echo json_encode([
-            'id' => $result['id'],
-            'quote' => $result['quote'],
-            'author_id' => $result['author_id'],
-            'category_id' => $result['category_id']
-        ]);
+        echo json_encode($result);
     } else {
-        echo json_encode(['message' => 'No Quotes Found']);
+        if (!$quote->author_exists($quote->author_id)) {
+            echo json_encode(['message' => 'author_id Not Found']);
+        } elseif (!$quote->category_exists($quote->category_id)) {
+            echo json_encode(['message' => 'category_id Not Found']);
+        } else {
+            echo json_encode(['message' => 'No Quotes Found']);
+        }
     }
 } else {
     echo json_encode(['message' => 'Missing Required Parameters']);

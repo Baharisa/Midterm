@@ -133,4 +133,22 @@ class Quote {
         $stmt->execute();
         return $stmt->rowCount() > 0;
     }
+
+    // ✅ Check if author exists
+    public function author_exists($author_id) {
+        $query = "SELECT id FROM authors WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $author_id);
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    }
+
+    // ✅ Check if category exists
+    public function category_exists($category_id) {
+        $query = "SELECT id FROM categories WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $category_id);
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    }
 }
