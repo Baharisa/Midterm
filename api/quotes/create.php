@@ -26,7 +26,7 @@ if (
 
     // ✅ Check if author exists
     if (!$quote->author_exists($quote->author_id)) {
-        http_response_code(404);
+        http_response_code(200);
         echo json_encode(['message' => 'author_id Not Found']);
         return;
     }
